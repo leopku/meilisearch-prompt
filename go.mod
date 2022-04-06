@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/dlclark/regexp2 v1.4.0
+	github.com/duke-git/lancet v1.2.7
 	github.com/gookit/filter v1.1.2
 	github.com/gookit/goutil v0.4.4
 	github.com/joomcode/errorx v1.1.0

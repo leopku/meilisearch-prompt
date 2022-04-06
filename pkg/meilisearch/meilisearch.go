@@ -28,6 +28,16 @@ func (m *Meilisearch) GetAllIndexes() ([]string, error) {
 	return result, nil
 }
 
+func (m *Meilisearch) FetchInfo(idxUid string) {
+	i := m.Cli.Index(idxUid)
+	resp, err := i.FetchInfo()
+	if err != nil {
+		fmt.Println("Fetch info failed: ", err)
+		return
+	}
+	fmt.Println(resp)
+}
+
 func (m *Meilisearch) GetSettings(i *meilisearch.Index) {
 	settings, err := i.GetSettings()
 	if err != nil {
@@ -59,8 +69,8 @@ func (m *Meilisearch) GetSettings(i *meilisearch.Index) {
 		fmt.Println("\t", s)
 	}
 	fmt.Println("Synonyms:")
-	for _, s := range settings.Synonyms {
-		fmt.Println("\t", s)
+	for k, v := range settings.Synonyms {
+		fmt.Println("\t", k, "\t", v)
 	}
 	fmt.Println("Distinct Attribute:")
 	fmt.Println("\t", settings.DistinctAttribute)
@@ -136,8 +146,8 @@ func (m *Meilisearch) GetSettingsItem(i *meilisearch.Index, item string) {
 			return
 		}
 		fmt.Println("Synonyms:")
-		for _, s := range *resp {
-			fmt.Println("\t", s)
+		for k, v := range *resp {
+			fmt.Println("\t", k, "\t", v)
 		}
 	case "distinct-attribute":
 		resp, err := i.GetDisplayedAttributes()
@@ -150,4 +160,91 @@ func (m *Meilisearch) GetSettingsItem(i *meilisearch.Index, item string) {
 			fmt.Println("\t", s)
 		}
 	}
+}
+
+func (m *Meilisearch) SetSettingsItem(i *meilisearch.Index, item string, params *[]string) {
+	switch strutil.Lowercase(item) {
+	case "displayed-attributes":
+		resp, err := i.UpdateDisplayedAttributes(params)
+		if err != nil {
+			fmt.Println("Set displayed-attributes failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+	case "searchable-attributes":
+		resp, err := i.UpdateSearchableAttributes(params)
+		if err != nil {
+			fmt.Println("Set searchable-attributes failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+	case "filterable-attributes":
+		resp, err := i.UpdateFilterableAttributes(params)
+		if err != nil {
+			fmt.Println("Set filterable-attributes failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+	case "sortable-attributes":
+		resp, err := i.UpdateSortableAttributes(params)
+		if err != nil {
+			fmt.Println("Set sortable-attributes failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+	case "ranking-rules":
+		resp, err := i.UpdateRankingRules(params)
+		if err != nil {
+			fmt.Println("Set ranking-rules failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+	case "stop-words":
+		resp, err := i.UpdateStopWords(params)
+		if err != nil {
+			fmt.Println("Set stop-words failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+
+	case "synonyms":
+		// resp, err := i.UpdateSynonyms(params.(*map[string][]string))
+		// if err != nil {
+		// 	fmt.Println("Set sortable-attributes failed:\t", err)
+		// 	return
+		// }
+		// fmt.Println("Task UID:\t", resp.UID)
+		fmt.Println("NOT Implenment yet.")
+	case "distinct-attribute":
+		resp, err := i.UpdateDistinctAttribute((*params)[0])
+		if err != nil {
+			fmt.Println("Set sortable-attributes failed:\t", err)
+			return
+		}
+		fmt.Println("Task UID:\t", resp.UID)
+	}
+}
+
+func (m *Meilisearch) GetIndexFields(idxUid string) []string {
+	i := m.Cli.Index(idxUid)
+	resp, err := i.GetStats()
+	if err != nil {
+		fmt.Println("Get fields failed: ", err)
+		return nil
+	}
+	var result []string
+	for k := range resp.FieldDistribution {
+		result = append(result, k)
+	}
+	return result
+}
+
+func (m *Meilisearch) FetchTask(id int64) {
+	resp, err := m.Cli.GetTask(id)
+	if err != nil {
+		fmt.Println("Get task failed: ", err)
+		return
+	}
+	fmt.Println("Task #", id, " :")
+	fmt.Println("\tstatus: ", resp.Status)
 }
