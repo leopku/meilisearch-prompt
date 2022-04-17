@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/duke-git/lancet/convertor"
 	"github.com/leopku/meilisearch-prompt/pkg/meilisearch"
-	"github.com/looplab/fsm"
 
 	"github.com/c-bata/go-prompt"
 	"github.com/dlclark/regexp2"
+	"github.com/duke-git/lancet/convertor"
 	"github.com/gookit/filter"
 	"github.com/gookit/goutil/arrutil"
 	"github.com/gookit/goutil/strutil"
+	"github.com/looplab/fsm"
 	"github.com/phuslu/log"
 )
 
@@ -96,19 +96,41 @@ func (c *Completer) createFunc(e *fsm.Event) {
 	// if ok {
 	// 	fmt.Println(args.([]string))
 	// }
-	currentIndex := e.Args[0].(string)
-	if arrutil.Contains([]string{"/", ".."}, currentIndex) {
-		currentIndex = ""
+	args := e.Args[0].([]string)
+	log.Debug().Interface("args", args).Int("len", len(args)).Msg("")
+	if len(args) < 2 {
+		return
 	}
-	c.CurrentIndex = currentIndex
+	uid := convertor.ToString(args[1])
+	log.Debug().Interface("uid", uid).Msg("")
+	if strutil.IsBlank(uid) {
+		return
+	}
+	// log.Debug().Str("uid", uid).Msg("")
+	// cfg := &msgo.IndexConfig{Uid: uid}
+	// if len(e.Args) > 2 {
+	// 	cfg.PrimaryKey = convertor.ToString(args[2])
+	// }
+	// resp, err := c.MS.Cli.CreateIndex(uid, args[2])
+	primaryKey := ""
+	if len(e.Args) > 2 {
+		primaryKey = convertor.ToString(args[2])
+	}
+	resp, err := c.MS.CreateIndex(uid, primaryKey)
+	if err != nil {
+		fmt.Println("Failed to create index: ", err)
+		return
+	}
+	fmt.Println("Task UID:\t", resp.UID)
 }
 
 func (c *Completer) updateFunc(e *fsm.Event) {
-
+	// primaryKey := e.Args[0].(string)
+	fmt.Println("NOT Implenment")
 }
 
 func (c *Completer) deleteFunc(e *fsm.Event) {
-
+	fmt.Println("NOT Implenment")
 }
 
 func (c *Completer) settingsFunc(e *fsm.Event) {
@@ -196,6 +218,15 @@ func (c *Completer) fieldCommandSuggestions(in string) (suggestions []prompt.Sug
 	for _, field := range fields {
 		result = append(result, prompt.Suggest{Text: field})
 	}
+	embedCmdSug := []prompt.Suggest{
+		{Text: "sort"},
+		{Text: "words"},
+		{Text: "typo"},
+		{Text: "proximity"},
+		{Text: "attribute"},
+		{Text: "exactness"},
+	}
+	result = append(result, embedCmdSug...)
 	return result
 }
 
@@ -228,6 +259,8 @@ func (c *Completer) Executor(in string) {
 		} else {
 			c.FSM.Event("in", targetIndex)
 		}
+	case "create":
+		c.FSM.Event("create", args)
 	case "info":
 		// currentIndex := args[1]
 		c.FSM.Event("info")

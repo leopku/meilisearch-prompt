@@ -3,6 +3,7 @@ package meilisearch
 import (
 	"fmt"
 
+	"github.com/duke-git/lancet/validator"
 	"github.com/gookit/goutil/strutil"
 	"github.com/meilisearch/meilisearch-go"
 )
@@ -223,6 +224,19 @@ func (m *Meilisearch) SetSettingsItem(i *meilisearch.Index, item string, params 
 		}
 		fmt.Println("Task UID:\t", resp.UID)
 	}
+}
+
+func (m *Meilisearch) CreateIndex(uid, primaryKey string) (*meilisearch.Task, error) {
+	cfg := meilisearch.IndexConfig{Uid: uid}
+	if !validator.IsEmptyString(primaryKey) {
+		cfg.PrimaryKey = primaryKey
+	}
+	return m.Cli.CreateIndex(&cfg)
+}
+
+func (m *Meilisearch) UpdateIndex(uid, primaryKey string) (*meilisearch.Key, error) {
+	key := &meilisearch.Key{Key: primaryKey}
+	return m.Cli.UpdateKey(uid, key)
 }
 
 func (m *Meilisearch) GetIndexFields(idxUid string) []string {
